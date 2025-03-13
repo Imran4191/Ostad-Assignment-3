@@ -12,8 +12,8 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-latest  # Runs on GitHub-hosted runner (Ubuntu)
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -31,28 +31,48 @@ jobs:
           mkdir -p test-results
           npm test > test-results/results.txt
 
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
+      - name: Upload test results (Updated to v4)
+        uses: actions/upload-artifact@v4  # 👈 UPDATED TO V4
         with:
           name: test-results
           path: test-results/
 
   deploy:
     needs: test
-    runs-on: self-hosted  # Self-hosted runner
+    runs-on: [self-hosted, macos]  # Ensures it runs only on your macOS self-hosted runner
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Download test results artifact
-        uses: actions/download-artifact@v3
+      - name: Download test results artifact (Updated to v4)
+        uses: actions/download-artifact@v4  # 👈 UPDATED TO V4
         with:
           name: test-results
           path: ./downloaded-artifacts/
 
       - name: Display test results
         run: cat ./downloaded-artifacts/results.txt
+
+      - name: Ensure Node.js is Installed (macOS)
+        run: |
+          if ! command -v node &> /dev/null; then
+            echo "Node.js not found. Installing..."
+            brew install node
+          else
+            echo "Node.js already installed"
+          fi
+        shell: bash
+
+      - name: Ensure PM2 is Installed (macOS)
+        run: |
+          if ! command -v pm2 &> /dev/null; then
+            echo "PM2 not found. Installing..."
+            npm install -g pm2
+          else
+            echo "PM2 already installed"
+          fi
+        shell: bash
 
       - name: Deploy Application
         run: |
